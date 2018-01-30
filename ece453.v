@@ -203,42 +203,34 @@ module ece453_fsm_example(
   always @ (*) 
   begin
 	//Default output and state
+	//current_state = START; //Setting current state because it is an output
     next_state = ERROR;
 	led_out = 4'b1111;
 
   case(current_state)
 	START: begin
+		led_out = LED_OUT_START;
 		if(~fsm_enable)begin
 			next_state = START;
-			led_out = LED_OUT_START;
 		end 
 		else begin
 			next_state = LED0;
-			led_out = LED_OUT_LED0;
 		end
 	end
 	
 	LED0: begin
+		led_out = LED_OUT_LED0;
 		//Typo in the documentation for state transition: L is supposed to be D
-		if(fsm_enable && button && ~direction)begin
+		if((fsm_enable && button && ~direction) || (fsm_enable && ~button) || (~fsm_enable))begin
 			next_state = LED0;
-			led_out = LED_OUT_LED0;
-		end
-		else if(fsm_enable && ~button)begin
-			next_state = LED0;
-			led_out = LED_OUT_LED0;
-		end
-		else if(~fsm_enable)begin
-			next_state = LED0;
-			led_out = LED_OUT_LED0;			
 		end
 		else if (fsm_enable && button && direction)begin
 			next_state = LED1;
-			led_out = LED_OUT_LED1;
 		end
 	end
 	
 	LED1: begin 
+		led_out = LED_OUT_LED1;
 		if(fsm_enable && button && ~direction)begin
 			next_state = LED0;
 			led_out = LED_OUT_LED0;
