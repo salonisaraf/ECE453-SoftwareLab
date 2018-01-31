@@ -15,10 +15,10 @@ reg [2:0] i;
 
 initial begin
 clk = 0;
-reset = 1; //Reset is an active high signal
-fsm_enable = 0;
-button = 0;
-direction = 0;
+reset = RESET_ACTIVE; //Reset is an active high signal
+fsm_enable = FSM_INACTIVE;
+button = BTN_NOT_PRESSED;
+direction = RIGHT;
 
 //Wait for sometime before changing inputs
 @(posedge clk);
@@ -26,7 +26,7 @@ direction = 0;
 @(negedge clk);
 
 //Deassert reset
-reset = 0;
+reset = RESET_INACTIVE;
 
 @(posedge clk);
 @(posedge clk);
@@ -41,11 +41,11 @@ reset = 0;
 	end
 
 //Test state transitions for START state
-fsm_enable = 1;
+fsm_enable = FSM_ACTIVE;
 @(posedge clk);
 @(posedge clk);
 @(negedge clk);
-fsm_enable = 0;
+fsm_enable = FSM_INACTIVE;
 //Check transition out of START state
 	if(current_state != LED0 || led_out != LED_OUT_LED0)begin
 		$display("Test 2 failed: Was supposed to be in LED0 state, was in: %h", current_state);
@@ -54,10 +54,11 @@ fsm_enable = 0;
 	else begin
 		$display("Test 2 passed!");
 	end
-	fsm_enable = 1;
-	button = 1;
-	direction = 1;
+	fsm_enable = FSM_ACTIVE;
+	button = BTN_PRESSED;
+	direction = LEFT;
 	
+	//Forward and backward directional state transitions 
 	for(i = 0; i < 6; i++)begin
 	@(posedge clk);
 	@(negedge clk);
@@ -108,9 +109,17 @@ fsm_enable = 0;
 	endcase	
 	end
 
+
 $display("All tests passed!");
 $stop();
+
 end
+
+
+//State transitions to ensure that we remain in same state
+task same_state_trans(input [2:0] state);
+
+endtask
 
 //Clock
 always
