@@ -203,8 +203,7 @@ module ece453_fsm_example(
   always @ (*) 
   begin
 	//Default output and state
-	//current_state = START; //Setting current state because it is an output
-    next_state = ERROR;
+    	next_state = ERROR;
 	led_out = 4'b1111;
 
   case(current_state)
