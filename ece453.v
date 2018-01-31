@@ -233,58 +233,36 @@ module ece453_fsm_example(
 		led_out = LED_OUT_LED1;
 		if(fsm_enable && button && ~direction)begin
 			next_state = LED0;
-			led_out = LED_OUT_LED0;
 		end
-		else if(fsm_enable && ~button)begin
-			next_state = LED1;
-			led_out = LED_OUT_LED1;		
-		end
-		else if(~fsm_enable)begin
-			next_state = LED1;
-			led_out = LED_OUT_LED1;				
+		else if((fsm_enable && ~button)|| (~fsm_enable))begin
+			next_state = LED1;	
 		end
 		else if(fsm_enable && button && direction)begin
 			next_state = LED2;
-			led_out = LED_OUT_LED2;
 		end
 	end
 	
 	LED2: begin
+		led_out = LED_OUT_LED2;	
 		if(fsm_enable && button && ~direction)begin
-			next_state = LED1;
-			led_out = LED_OUT_LED1;				
+			next_state = LED1;			
 		end
-		else if(fsm_enable && ~button)begin
-			next_state = LED2;
-			led_out = LED_OUT_LED2;			
-		end
-		else if(~fsm_enable)begin
-			next_state = LED2;
-			led_out = LED_OUT_LED2;				
+		else if((fsm_enable && ~button) || (~fsm_enable))begin
+			next_state = LED2;		
 		end
 		else if(fsm_enable && button && direction)begin
 			next_state = LED3;
-			led_out = LED_OUT_LED3;
 		end
 	end
 	
 	LED3: begin
+		led_out = LED_OUT_LED3;	
 		if(fsm_enable && button && ~direction)begin
 			next_state = LED2;
-			led_out = LED_OUT_LED2;	
 		end
-		else if(fsm_enable && ~button)begin
+		else if((fsm_enable && ~button) || (~fsm_enable) || (fsm_enable && button && direction))begin
 			next_state = LED3;
-			led_out = LED_OUT_LED3;
 		end 
-		else if(~fsm_enable)begin
-			next_state = LED3;
-			led_out = LED_OUT_LED3;		
-		end
-		else if(fsm_enable && button && direction)begin
-			next_state = LED3;
-			led_out = LED_OUT_LED3;				
-		end
 	end
 	
   endcase
