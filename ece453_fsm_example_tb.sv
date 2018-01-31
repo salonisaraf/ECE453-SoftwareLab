@@ -32,9 +32,12 @@ reset = 0;
 @(posedge clk);
 @(negedge clk);
 //Since reset was asserted and then deasserted, we should start in the START state
-	if(current_state != START)begin
+	if(current_state != START || led_out != LED_OUT_START)begin
 		$display("Test 1 failed: Was supposed to be in START state, was in: %h", current_state);
 		$stop();
+	end
+	else begin
+		$display("Test 1 passed!");
 	end
 
 //Test state transitions for START state
@@ -48,7 +51,9 @@ fsm_enable = 0;
 		$display("Test 2 failed: Was supposed to be in LED0 state, was in: %h", current_state);
 		$stop();	
 	end
-
+	else begin
+		$display("Test 2 passed!");
+	end
 	fsm_enable = 1;
 	button = 1;
 	direction = 1;
@@ -60,29 +65,46 @@ fsm_enable = 0;
 		0: if(current_state == LED1 && led_out == LED_OUT_LED1)begin
 		$display("Test %h passed!", (i + 3'h2));
 		end
+		else begin
+		$display("Test %h failed: Was supposed to be in LED1 state, was in: %h", (i + 3'h2), current_state);	
+		end
 		
-		1: if(current_state == LED2 || led_out == LED_OUT_LED2)begin
+		1: if(current_state == LED2 && led_out == LED_OUT_LED2)begin
 		$display("Test %h passed!", (i + 3'h2));	
 		end
-	
-		2: if(current_state == LED3 || led_out == LED_OUT_LED3)begin
+		else begin
+		$display("Test %h failed: Was supposed to be in LED2 state, was in: %h", (i + 3'h2), current_state);	
+		end
+			
+		2: if(current_state == LED3 && led_out == LED_OUT_LED3)begin
 		$display("Test %h passed!", (i + 3'h2));	
 		//Reverse direction	
 		direction = 0;
 		end
-		
-		3: if(current_state == LED2 || led_out == LED_OUT_LED2)begin
-		$display("Test %h passed!", (i + 3'h2));	
+		else begin
+		$display("Test %h failed: Was supposed to be in LED3 state, was in: %h", (i + 3'h2), current_state);	
 		end		
 		
+		3: if(current_state == LED2 && led_out == LED_OUT_LED2)begin
+		$display("Test %h passed!", (i + 3'h2));	
+		end		
+		else begin
+		$display("Test %h failed: Was supposed to be in LED2 state, was in: %h", (i + 3'h2), current_state);
+		end	
+			
 		4: if(current_state == LED1 && led_out == LED_OUT_LED1)begin
 		$display("Test %h passed!", (i + 3'h2));
 		end
-		
+		else begin
+		$display("Test %h failed: Was supposed to be in LED1 state, was in: %h", (i + 3'h2), current_state);
+		end	
+			
 		5: if(current_state == LED0 && led_out == LED_OUT_LED0)begin
 		$display("Test %h passed!", (i + 3'h2));
 		end
-				
+		else begin
+		$display("Test %h failed: Was supposed to be in LED0 state, was in: %h", (i + 3'h2), current_state);
+		end				
 	endcase	
 	end
 
