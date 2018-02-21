@@ -199,14 +199,14 @@ endmodule
 module toggle_detect(
   clk,
   reset,
-  switch,
+  switch_n,
   led_out
 );
   input clk;
   input reset;
   input switch_n; //Slide switch produces an active low signal
   output reg led_out;
-  reg [1:0] current_state, next_state;
+  reg [1:0] current_state, next_state, previous_state;
   localparam START = 2'b00;
   localparam SW_ON = 2'b01;
   localparam SW_OFF = 2'b10;
@@ -223,7 +223,7 @@ module toggle_detect(
   begin
 	//Default output and state
     next_state = ERROR;
-	led_out = 1'b0;
+	led_out = LED_OFF;
 
   case(current_state)
 	START: begin
@@ -231,17 +231,17 @@ module toggle_detect(
 		if(switch_n)begin
 			next_state = START;
 		end 
-		else begin
+		else if(~switch_n)begin
 			next_state = SW_ON;
 		end
 	end
 	
 	SW_ON: begin
 		led_out = LED_ON;
-		if(switch_n)begin
+		if(~switch_n)begin
 			next_state = SW_ON;
 		end 
-		else begin
+		else if(switch_n) begin
 			next_state = SW_OFF;
 		end
 	end
@@ -251,7 +251,7 @@ module toggle_detect(
 		if(switch_n)begin
 			next_state = SW_OFF;
 		end 
-		else begin
+		else  if(~switch_n) begin
 			next_state = SW_ON;
 		end
 	end
@@ -269,10 +269,12 @@ end
   begin
     if  (reset == 1) 
     begin
+      previous_state <= ERROR;
       current_state <= START;
     end 
     else 
     begin
+      previous_state <= current_state;
       current_state <= next_state;
     end
   end

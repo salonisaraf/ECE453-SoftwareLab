@@ -1,7 +1,7 @@
 module toggle_detect_tb();
 
 //Inputs and outputs of DUT
-logic clk, reset, switch; //Inputs of iDUT
+logic clk, reset, switch_n; //Inputs of iDUT
 logic toggle_led; //Output 
 //logic [2:0] current_state; //Output
 
@@ -9,7 +9,7 @@ logic toggle_led; //Output
 	toggle_detect iDUT(
 		.clk(clk),
 		.reset(reset),
-		.switch(switch),
+		.switch_n(switch_n),
 		.led_out(toggle_led)
 	);
   
@@ -28,8 +28,7 @@ reg [5:0] i;
 initial begin
 clk = 0;
 reset = 1; //Reset is an active high signal
-switch = 0;
-
+switch_n = 1;
 //Wait for sometime before changing inputs
 @(posedge clk);
 @(posedge clk);
@@ -51,10 +50,10 @@ reset = 0;
 	end
 
 //Test state transitions for START state
-switch = SW_HIGH;
+switch_n = SW_LOW;
+@(posedge clk);
+@(posedge clk);
 @(negedge clk);
-switch = SW_LOW;
-
 //Check transition out of START state
 	if(iDUT.current_state != SW_ON || toggle_led != LED_ON)begin
 		$display("Test 2 failed: Was supposed to be in LED0 state, was in: %h", iDUT.current_state);
@@ -65,9 +64,10 @@ switch = SW_LOW;
 	end
 	
 //Test state transitions for START state
-switch = SW_HIGH;
+switch_n = SW_HIGH;
+@(posedge clk);
+@(posedge clk);
 @(negedge clk);
-switch = SW_LOW;
 //Check transition out of START state
 	if(iDUT.current_state != SW_OFF || toggle_led != LED_OFF)begin
 		$display("Test 3 failed: Was supposed to be in LED0 state, was in: %h", iDUT.current_state);
