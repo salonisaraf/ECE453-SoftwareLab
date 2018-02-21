@@ -67,7 +67,7 @@ module ece453(
   reg   [31:0] gpio_in_irqs;
   wire  [2:0]  fsm_state;
   wire  [3:0]  fsm_leds;
-  wire 		   toggle_switch, toggle_led;
+  wire	       toggle_led;
   wire         debounced_key;
 
   //*******************************************************************
@@ -185,7 +185,7 @@ module ece453(
 	toggle_detect(
 		.clk(clk),
 		.reset(reset),
-		.switch(toggle_switch),
+		.switch(gpio_inputs[4]),
 		.led_out(toggle_led)
 	);
   
