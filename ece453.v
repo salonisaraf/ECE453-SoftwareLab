@@ -162,13 +162,13 @@ module ece453(
   ); 
  
   // Debounce the slide switch that controls the state machine 
-  ece453_debounce switch
-  (
-	  .clk(clk),
-	  .reset(reset),
-    .button_in(gpio_inputs[4]),
-    .button_out(toggle_switch)
-  );  
+//  ece453_debounce switch
+//  (
+//	  .clk(clk),
+//	  .reset(reset),
+//    .button_in(gpio_inputs[4]),
+//    .button_out(toggle_switch)
+//  );  
 
   // Determine if the LED should be moved.
   ece453_fsm_example ece453_fsm
@@ -204,7 +204,7 @@ module toggle_detect(
 );
   input clk;
   input reset;
-  input switch;
+  input switch_n; //Slide switch produces an active low signal
   output reg led_out;
   reg [1:0] current_state, next_state;
   localparam START = 2'b00;
@@ -228,7 +228,7 @@ module toggle_detect(
   case(current_state)
 	START: begin
 		led_out = LED_OFF;
-		if(~switch)begin
+		if(switch_n)begin
 			next_state = START;
 		end 
 		else begin
@@ -238,7 +238,7 @@ module toggle_detect(
 	
 	SW_ON: begin
 		led_out = LED_ON;
-		if(~switch)begin
+		if(switch_n)begin
 			next_state = SW_ON;
 		end 
 		else begin
@@ -248,7 +248,7 @@ module toggle_detect(
 	
 	SW_OFF: begin
 		led_out = LED_OFF;
-		if(~switch)begin
+		if(switch_n)begin
 			next_state = SW_OFF;
 		end 
 		else begin
