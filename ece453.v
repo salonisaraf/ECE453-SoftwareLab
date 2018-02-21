@@ -185,7 +185,7 @@ module ece453(
 	toggle_detect(
 		.clk(clk),
 		.reset(reset),
-		.switch(gpio_inputs[4]),
+		.switch_n(gpio_inputs[4]),
 		.led_out(toggle_led)
 	);
   
@@ -228,30 +228,30 @@ module toggle_detect(
   case(current_state)
 	START: begin
 		led_out = LED_OFF;
-		if(switch_n)begin
+		if(~switch_n)begin
 			next_state = START;
 		end 
-		else if(~switch_n)begin
+		else if(switch_n)begin
 			next_state = SW_ON;
 		end
 	end
 	
 	SW_ON: begin
 		led_out = LED_ON;
-		if(~switch_n)begin
+		if(switch_n)begin
 			next_state = SW_ON;
 		end 
-		else if(switch_n) begin
+		else if(~switch_n) begin
 			next_state = SW_OFF;
 		end
 	end
 	
 	SW_OFF: begin
 		led_out = LED_OFF;
-		if(switch_n)begin
+		if(~switch_n)begin
 			next_state = SW_OFF;
 		end 
-		else  if(~switch_n) begin
+		else  if(switch_n) begin
 			next_state = SW_ON;
 		end
 	end
