@@ -121,7 +121,7 @@ module ece453(
   assign status_in      = {29'h0, fsm_state };
   assign im_in          = ( (slave_address == IM_ADDR )   && slave_write ) ? slave_writedata : im_r;
   assign gpio_in        = gpio_inputs;
-  assign gpio_out       = {23'h0, toggle_led, fsm_state, fsm_leds};
+  assign gpio_out       = {23'h0, fsm_state, toggle_led, fsm_leds};
   //assign gpio_out       = ( (slave_address == GPIO_OUT_ADDR )   && slave_write ) ? slave_writedata : gpio_out_r;
 
   //*******************************************************************
