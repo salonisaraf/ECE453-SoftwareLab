@@ -67,6 +67,7 @@ module ece453(
   reg   [31:0] gpio_in_irqs;
   wire  [2:0]  fsm_state;
   wire  [3:0]  fsm_leds;
+  wire 		   toggle_switch, toggle_led;
   wire         debounced_key;
 
   //*******************************************************************
@@ -120,7 +121,7 @@ module ece453(
   assign status_in      = {29'h0, fsm_state };
   assign im_in          = ( (slave_address == IM_ADDR )   && slave_write ) ? slave_writedata : im_r;
   assign gpio_in        = gpio_inputs;
-  assign gpio_out       = {24'h0, fsm_state, fsm_leds};
+  assign gpio_out       = {23'h0, toggle_led, fsm_state, fsm_leds};
   //assign gpio_out       = ( (slave_address == GPIO_OUT_ADDR )   && slave_write ) ? slave_writedata : gpio_out_r;
 
   //*******************************************************************
@@ -159,6 +160,15 @@ module ece453(
     .button_in(gpio_inputs[0]),
     .button_out(debounced_key)
   ); 
+ 
+  // Debounce the slide switch that controls the state machine 
+  ece453_debounce switch
+  (
+	  .clk(clk),
+	  .reset(reset),
+    .button_in(gpio_inputs[4]),
+    .button_out(toggle_switch)
+  );  
 
   // Determine if the LED should be moved.
   ece453_fsm_example ece453_fsm
@@ -172,8 +182,103 @@ module ece453(
     .current_state(fsm_state)
   );
 
+	toggle_detect(
+		.clk(clk),
+		.reset(reset),
+		.switch(toggle_switch),
+		.led_out(toggle_led)
+	);
+  
+  //Display state onto the 7 segment display
+  
+endmodule
+
+//*****************************************************************************
+// ECE453 Switch Toggle
+//*****************************************************************************
+module toggle_detect(
+  clk,
+  reset,
+  switch,
+  led_out
+);
+  input clk;
+  input reset;
+  input switch;
+  output reg led_out;
+  reg [1:0] current_state, next_state;
+  localparam START = 2'b00;
+  localparam SW_ON = 2'b01;
+  localparam SW_OFF = 2'b10;
+  localparam ERROR = 2'b11;
+  
+  localparam LED_ON = 1'b1;
+  localparam LED_OFF = 1'b0;
+
+  // Implment the combinational logic for the FSM and output logic as
+  // a combinational block using BLOCKING statements!!!
+  //
+  // The sensitivity list should be a *
+  always @ (*) 
+  begin
+	//Default output and state
+    next_state = ERROR;
+	led_out = 1'b0;
+
+  case(current_state)
+	START: begin
+		led_out = LED_OFF;
+		if(~switch)begin
+			next_state = START;
+		end 
+		else begin
+			next_state = SW_ON;
+		end
+	end
+	
+	SW_ON: begin
+		led_out = LED_ON;
+		if(~switch)begin
+			next_state = SW_ON;
+		end 
+		else begin
+			next_state = SW_OFF;
+		end
+	end
+	
+	SW_OFF: begin
+		led_out = LED_OFF;
+		if(~switch)begin
+			next_state = SW_OFF;
+		end 
+		else begin
+			next_state = SW_ON;
+		end
+	end
+	
+  endcase
+end
+
+  // Implement the D Flip Flops used for the FSM as a separate always block
+  //
+  // For sequential logic, you must use NON-Blocking statements!!!! 
+  //
+  // The sensitivity list should ONLY be the an edge of the clock AND the reset
+  // signal.
+  always @ ( posedge clk or posedge reset) 
+  begin
+    if  (reset == 1) 
+    begin
+      current_state <= START;
+    end 
+    else 
+    begin
+      current_state <= next_state;
+    end
+  end
 
 endmodule
+
 
 //*****************************************************************************
 // ECE453 FSM Example 
@@ -193,8 +298,6 @@ module ece453_fsm_example(
   `include "ece453_fsm_example.vh"
   
   reg [2:0] next_state;
-
-
 
   // Implment the combinational logic for the FSM and output logic as
   // a combinational block using BLOCKING statements!!!

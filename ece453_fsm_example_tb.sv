@@ -48,11 +48,11 @@ fsm_enable = FSM_ACTIVE;
 fsm_enable = FSM_INACTIVE;
 //Check transition out of START state
 	if(current_state != LED0 || led_out != LED_OUT_LED0)begin
-		$display("Test 2 failed: Was supposed to be in LED0 state, was in: %h", current_state);
+		$display("Test 1.1 failed: Was supposed to be in LED0 state, was in: %h", current_state);
 		$stop();	
 	end
 	else begin
-		$display("Test 2 passed!");
+		$display("Test 1.1 passed!");
 	end
 	fsm_enable = FSM_ACTIVE;
 	button = BTN_PRESSED;
