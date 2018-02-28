@@ -69,7 +69,7 @@ module ece453(
   wire  [3:0]  fsm_leds;
   wire	       toggle_led;
   wire         debounced_key;
-
+  wire	[3:0]      message;
   //*******************************************************************
   // Register Read Assignments
   //*******************************************************************
@@ -121,7 +121,7 @@ module ece453(
   assign status_in      = {29'h0, fsm_state };
   assign im_in          = ( (slave_address == IM_ADDR )   && slave_write ) ? slave_writedata : im_r;
   assign gpio_in        = gpio_inputs;
-  assign gpio_out       = {23'h0, fsm_state, toggle_led, fsm_leds};
+  assign gpio_out       = {23'h0, message, toggle_led, fsm_leds};
   //assign gpio_out       = ( (slave_address == GPIO_OUT_ADDR )   && slave_write ) ? slave_writedata : gpio_out_r;
 
   //*******************************************************************
@@ -186,7 +186,8 @@ module ece453(
 		.clk(clk),
 		.reset(reset),
 		.switch_n(gpio_inputs[4]),
-		.led_out(toggle_led)
+		.led_out(toggle_led),
+		.message(message)
 	);
   
   //Display state onto the 7 segment display
@@ -200,12 +201,14 @@ module toggle_detect(
   clk,
   reset,
   switch_n,
-  led_out
+  led_out,
+  message
 );
   input clk;
   input reset;
   input switch_n; //Slide switch produces an active low signal
   output reg led_out;
+  output reg [3:0] message;
   reg [1:0] current_state, next_state, previous_state;
   localparam START = 2'b00;
   localparam SW_ON = 2'b01;
@@ -214,6 +217,11 @@ module toggle_detect(
   
   localparam LED_ON = 1'b1;
   localparam LED_OFF = 1'b0;
+  
+  localparam message_START = 4'b0000;
+  localparam message_ON = 4'b0001;
+  localparam message_OFF = 4'b0010;  
+  localparam message_ERROR = 4'b0011; 
 
   // Implment the combinational logic for the FSM and output logic as
   // a combinational block using BLOCKING statements!!!
@@ -223,11 +231,12 @@ module toggle_detect(
   begin
 	//Default output and state
     next_state = ERROR;
-	led_out = LED_OFF;
-
+    led_out = LED_OFF;
+    message = message_ERROR;
   case(current_state)
 	START: begin
 		led_out = LED_OFF;
+		message = message_START;		
 		if(~switch_n)begin
 			next_state = START;
 		end 
@@ -238,6 +247,7 @@ module toggle_detect(
 	
 	SW_ON: begin
 		led_out = LED_ON;
+		message = message_ON;
 		if(switch_n)begin
 			next_state = SW_ON;
 		end 
@@ -248,6 +258,7 @@ module toggle_detect(
 	
 	SW_OFF: begin
 		led_out = LED_OFF;
+		message = message_OFF;
 		if(~switch_n)begin
 			next_state = SW_OFF;
 		end 
