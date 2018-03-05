@@ -70,6 +70,11 @@ module ece453(
   wire	       toggle_led;
   wire         debounced_key;
   wire	[3:0]      message;
+  
+  localparam message_START = 4'b0000;
+  localparam message_ON = 4'b0001;
+  localparam message_OFF = 4'b0010;  
+  localparam message_ERROR = 4'b0011; 
   //*******************************************************************
   // Register Read Assignments
   //*******************************************************************
@@ -94,10 +99,10 @@ module ece453(
   // enters state 1 or state 4.
 	always @ (*)
 	begin
-		// Set the default value of the irq registe
+		// Set the default value of the irq register
 		irq_in = irq_r;
 		
-		if( ((fsm_state == 3'd1) || ( fsm_state == 3'd4)) && ( fsm_state != status_r[2:0]))
+		if( ((message == message_ON) || (message == message_OFF)) && (message != status_r[3:0]))
 		begin
 			irq_in = irq_r | 32'h1;
 		end
