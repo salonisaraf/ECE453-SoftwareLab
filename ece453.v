@@ -111,7 +111,7 @@ module ece453(
 //		end
 //		
 //		else
-		if(((message == message_ON) || (message == message_OFF)) && message != status_r[3:0])
+		if(message != status_r[3:0])
 		begin
 			irq_in = irq_r | 32'h1; //Set the interrupt to be active
 		end
