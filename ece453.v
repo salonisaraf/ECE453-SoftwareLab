@@ -112,7 +112,7 @@ module ece453(
 //		end
 //		
 //		else
-		if((message != message_START) && (message != status_r[3:0]))
+		if(message != status_r[3:0])
 		begin
 			irq_in = irq_r | 32'h1; //Activate interrupt
 		end
@@ -258,7 +258,7 @@ module toggle_detect(
 		if(~detect_sw || ~switch_n)begin
 			next_state = START;
 		end 
-		else if(detect_sw && switch_n)begin
+		else if(detect_sw || switch_n)begin
 			next_state = SW_ON;
 		end
 	end
