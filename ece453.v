@@ -70,6 +70,7 @@ module ece453(
   wire	       toggle_led;
   wire         debounced_key;
   wire	[3:0]      message;
+  wire 	       detect_switch;
   
 
   localparam message_START = 4'b0000;
@@ -111,7 +112,7 @@ module ece453(
 //		end
 //		
 //		else
-		if(message != message_START && message != status_r[3:0])
+		if((message != message_START) && (message != status_r[3:0]))
 		begin
 			irq_in = irq_r | 32'h1; //Activate interrupt
 		end
@@ -176,13 +177,13 @@ module ece453(
   ); 
  
   // Debounce the slide switch that controls the state machine 
-//  ece453_debounce switch
-//  (
-//	  .clk(clk),
-//	  .reset(reset),
-//    .button_in(gpio_inputs[4]),
-//    .button_out(toggle_switch)
-//  );  
+  ece453_debounce switch
+  (
+	  .clk(clk),
+	  .reset(reset),
+          .button_in(gpio_inputs[4]),
+          .button_out(toggle_switch)
+  );  
 
   // Determine if the LED should be moved.
   ece453_fsm_example ece453_fsm
@@ -199,6 +200,7 @@ module ece453(
 	toggle_detect(
 		.clk(clk),
 		.reset(reset),
+		.detect_sw(detect_switch),
 		.switch_n(gpio_inputs[4]),
 		.led_out(toggle_led),
 		.message(message)
@@ -214,13 +216,15 @@ endmodule
 module toggle_detect(
   clk,
   reset,
+  detect_sw,
   switch_n,
   led_out,
   message
 );
   input clk;
   input reset;
-  input switch_n; //Slide switch produces an active low signal
+  input switch_n; //Slide switch produces an active high signal when on
+  input detect_sw; //Detect change in switch's toggle position
   output reg led_out;
   output reg [3:0] message;
   reg [1:0] current_state, next_state, previous_state;
@@ -251,10 +255,10 @@ module toggle_detect(
 	START: begin
 		led_out = LED_OFF;
 		message = message_START;		
-		if(~switch_n)begin
+		if(~detect_sw && ~switch_n)begin
 			next_state = START;
 		end 
-		else if(switch_n)begin
+		else if(detect_sw && switch_n)begin
 			next_state = SW_ON;
 		end
 	end
@@ -265,7 +269,7 @@ module toggle_detect(
 		if(switch_n)begin
 			next_state = SW_ON;
 		end 
-		else if(~switch_n) begin
+		else if(detect_sw && ~switch_n) begin
 			next_state = SW_OFF;
 		end
 	end
@@ -276,7 +280,7 @@ module toggle_detect(
 		if(~switch_n)begin
 			next_state = SW_OFF;
 		end 
-		else  if(switch_n) begin
+		else  if(detect_sw && switch_n) begin
 			next_state = SW_ON;
 		end
 	end
@@ -439,7 +443,7 @@ module ece453_debounce(
   begin
       if(debounce_timer_r == 24'd0)
       begin
-        debounce_timer_in = 24'd500000;
+        debounce_timer_in = 24'd01;
         samples_in = ((samples_r << 1) | button_in);
       end
       else
@@ -448,7 +452,9 @@ module ece453_debounce(
         samples_in = samples_r;
       end
 
-      if( samples_r == 8'h80)
+      //Detect debouncing on both rise and fall 
+      //e.g. 00000001 and 10000000 (1 followed by 0s for rise, 0s followed by 1 for fall)
+      if( samples_r == 8'h80 || samples_r == 8'h01 )
       begin
         button_out = 1;
         samples_in = 8'h00;
