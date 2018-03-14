@@ -443,7 +443,7 @@ module ece453_debounce(
   begin
       if(debounce_timer_r == 24'd0)
       begin
-        debounce_timer_in = 24'd01;
+        debounce_timer_in = 24'd500000;
         samples_in = ((samples_r << 1) | button_in);
       end
       else
