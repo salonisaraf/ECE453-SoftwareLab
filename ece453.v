@@ -255,7 +255,7 @@ module toggle_detect(
 	START: begin
 		led_out = LED_OFF;
 		message = message_START;		
-		if(~detect_sw && ~switch_n)begin
+		if(~detect_sw || ~switch_n)begin
 			next_state = START;
 		end 
 		else if(detect_sw && switch_n)begin
@@ -266,7 +266,7 @@ module toggle_detect(
 	SW_ON: begin
 		led_out = LED_ON;
 		message = message_ON;
-		if(switch_n)begin
+		if(~detect_sw || switch_n)begin
 			next_state = SW_ON;
 		end 
 		else if(detect_sw && ~switch_n) begin
@@ -277,7 +277,7 @@ module toggle_detect(
 	SW_OFF: begin
 		led_out = LED_OFF;
 		message = message_OFF;
-		if(~switch_n)begin
+		if(~detect_sw || ~switch_n)begin
 			next_state = SW_OFF;
 		end 
 		else  if(detect_sw && switch_n) begin
