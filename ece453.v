@@ -182,7 +182,7 @@ module ece453(
 	  .clk(clk),
 	  .reset(reset),
           .button_in(gpio_inputs[4]),
-          .button_out(toggle_switch)
+          .button_out(detect_switch)
   );  
 
   // Determine if the LED should be moved.
@@ -255,10 +255,10 @@ module toggle_detect(
 	START: begin
 		led_out = LED_OFF;
 		message = message_START;		
-		if(~detect_sw || ~switch_n)begin
+		if(~switch_n)begin
 			next_state = START;
 		end 
-		else if(detect_sw || switch_n)begin
+		else if(switch_n)begin
 			next_state = SW_ON;
 		end
 	end
@@ -269,7 +269,7 @@ module toggle_detect(
 		if(~detect_sw || switch_n)begin
 			next_state = SW_ON;
 		end 
-		else if(detect_sw && ~switch_n) begin
+		else if(detect_sw) begin
 			next_state = SW_OFF;
 		end
 	end
@@ -280,7 +280,7 @@ module toggle_detect(
 		if(~detect_sw || ~switch_n)begin
 			next_state = SW_OFF;
 		end 
-		else  if(detect_sw && switch_n) begin
+		else  if(detect_sw) begin
 			next_state = SW_ON;
 		end
 	end
@@ -454,7 +454,7 @@ module ece453_debounce(
 
       //Detect debouncing on both rise and fall 
       //e.g. 00000001 and 10000000 (1 followed by 0s for rise, 0s followed by 1 for fall)
-      if( samples_r == 8'h80 || samples_r == 8'h01 )
+      if( samples_r == 8'h80 || samples_r == 8'h0F )
       begin
         button_out = 1;
         samples_in = 8'h00;
