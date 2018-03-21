@@ -284,7 +284,10 @@ module toggle_detect(
 			next_state = SW_ON;
 		end
 	end
-	
+	ERROR: begin
+		led_out = LED_OFF;
+		message = message_START;	
+		end
   endcase
 end
 
@@ -454,7 +457,7 @@ module ece453_debounce(
 
       //Detect debouncing on both rise and fall 
       //e.g. 00000001 and 10000000 (1 followed by 0s for rise, 0s followed by 1 for fall)
-      if( samples_r == 8'h80 || samples_r == 8'h0F )
+      if( samples_r == 8'h80 || samples_r == 8'h7F )
       begin
         button_out = 1;
         samples_in = 8'h00;
