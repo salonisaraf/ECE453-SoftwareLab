@@ -28,5 +28,10 @@
 
   localparam BTN_PRESSED      = 1'b1;
   localparam BTN_NOT_PRESSED  = 1'b0;
+  
+  localparam OFF = 2'b00;
+  localparam LOW = 2'b01;
+  localparam MED = 2'b10;
+  localparam HI = 2'b11;
 
 `endif

@@ -71,6 +71,7 @@ module ece453(
   wire         debounced_key;
   wire	[3:0]      message;
   wire 	       detect_switch;
+  wire  [1:0]  pwm_level;
   
 
   localparam message_START = 4'b0000;
@@ -131,12 +132,12 @@ module ece453(
 	end
 
   // Input signals for registers
-  assign control_in     = ( (slave_address == CONTROL_ADDR )  && slave_write ) ? (slave_writedata & (CONTROL_FSM_DIR_MASK | CONTROL_FSM_ENABLE_MASK)) : control_r ;
+  assign control_in     = ( (slave_address == CONTROL_ADDR )  && slave_write ) ? (slave_writedata & (CONTROL_CAP_TOUCH_HI_MASK | CONTROL_CAP_TOUCH_MED_MASK | CONTROL_CAP_TOUCH_LO_MASK)) : control_r ;
 //  assign status_in      = {29'h0, fsm_state };
   assign status_in 	= {28'h0, message};
   assign im_in          = ( (slave_address == IM_ADDR )   && slave_write ) ? slave_writedata : im_r;
   assign gpio_in        = gpio_inputs;
-  assign gpio_out       = {23'h0, message, toggle_led, fsm_leds};
+  assign gpio_out       = {21'h0, pwm_level, message, toggle_led, fsm_leds};
   //assign gpio_out       = ( (slave_address == GPIO_OUT_ADDR )   && slave_write ) ? slave_writedata : gpio_out_r;
 
   //*******************************************************************
@@ -190,14 +191,12 @@ module ece453(
   (
 	  .clk(clk),
 	  .reset(reset),
-    .fsm_enable(control_r[CONTROL_FSM_ENABLE_BIT_NUM]),
-    .button(debounced_key),
-    .direction(control_r[CONTROL_FSM_DIR_BIT_NUM]),
-    .led_out(fsm_leds), 
-    .current_state(fsm_state)
+    .cap_touch_sig(control_r[CONTROL_CAP_TOUCH_LO_BIT_NUM : CONTROL_CAP_TOUCH_HI_BIT_NUM]),
+    .pwm_level(pwm_level) 
   );
 
-	toggle_detect(
+  //Toggle switch detection to control web app and indicator board
+	toggle_detect ece453_toggle_detect(
 		.clk(clk),
 		.reset(reset),
 		.detect_sw(detect_switch),
@@ -320,18 +319,15 @@ endmodule
 module ece453_fsm_example(
   input clk,
   input reset,
-  input fsm_enable,
-  input button,
-  input direction,
-  output reg [3:0] led_out,
-  output reg [2:0] current_state
+  input [2:0] cap_touch_sig,
+  output reg [1:0] pwm_level
 );
 
  
   // Include the header file with the state definitions
   `include "ece453_fsm_example.vh"
   
-  reg [2:0] next_state;
+  reg [1:0] current_state, next_state;
 
   // Implment the combinational logic for the FSM and output logic as
   // a combinational block using BLOCKING statements!!!
@@ -340,65 +336,72 @@ module ece453_fsm_example(
   always @ (*) 
   begin
 	//Default output and state
-    	next_state = ERROR;
-	led_out = 4'b1111;
+    	next_state = OFF;
+	pwm_level = 2'h00;
 
   case(current_state)
-	START: begin
-		led_out = LED_OUT_START;
-		if(~fsm_enable)begin
-			next_state = START;
+	OFF: begin
+		pwm_level = 2'h00;
+		if(cap_touch_sig == 3'h01)begin
+			next_state = HI;
 		end 
+		else if(cap_touch_sig == 3'h02)begin
+			next_state = MED;
+		end 
+		else if(cap_touch_sig == 3'h04)begin
+			next_state = LOW;
+		end 				
 		else begin
-			next_state = LED0;
+			next_state = OFF;
 		end
 	end
 	
-	LED0: begin
-		led_out = LED_OUT_LED0;
-		//Typo in the documentation for state transition: L is supposed to be D
-		if((fsm_enable && button && ~direction) || (fsm_enable && ~button) || (~fsm_enable))begin
-			next_state = LED0;
-		end
-		else if (fsm_enable && button && direction)begin
-			next_state = LED1;
-		end
-	end
-	
-	LED1: begin 
-		led_out = LED_OUT_LED1;
-		if(fsm_enable && button && ~direction)begin
-			next_state = LED0;
-		end
-		else if((fsm_enable && ~button)|| (~fsm_enable))begin
-			next_state = LED1;	
-		end
-		else if(fsm_enable && button && direction)begin
-			next_state = LED2;
-		end
-	end
-	
-	LED2: begin
-		led_out = LED_OUT_LED2;	
-		if(fsm_enable && button && ~direction)begin
-			next_state = LED1;			
-		end
-		else if((fsm_enable && ~button) || (~fsm_enable))begin
-			next_state = LED2;		
-		end
-		else if(fsm_enable && button && direction)begin
-			next_state = LED3;
-		end
-	end
-	
-	LED3: begin
-		led_out = LED_OUT_LED3;	
-		if(fsm_enable && button && ~direction)begin
-			next_state = LED2;
-		end
-		else if((fsm_enable && ~button) || (~fsm_enable) || (fsm_enable && button && direction))begin
-			next_state = LED3;
+	HI: begin
+		pwm_level = 2'h03;	
+		if(cap_touch_sig == 3'h00)begin
+			next_state = OFF;
 		end 
+		else if(cap_touch_sig == 3'h02)begin
+			next_state = MED;
+		end 
+		else if(cap_touch_sig == 3'h04)begin
+			next_state = LOW;
+		end 				
+		else begin
+			next_state = HI;
+		end
+	end
+	
+	MED: begin 
+		pwm_level = 2'h02;	
+		if(cap_touch_sig == 3'h00)begin
+			next_state = OFF;
+		end 
+		else if(cap_touch_sig == 3'h01)begin
+			next_state = HI;
+		end 
+		else if(cap_touch_sig == 3'h04)begin
+			next_state = LOW;
+		end 				
+		else begin
+			next_state = MED;
+		end
+	end
+	
+	LOW: begin
+		pwm_level = 2'h01;	
+		if(cap_touch_sig == 3'h00)begin
+			next_state = OFF;
+		end 
+		else if(cap_touch_sig == 3'h01)begin
+			next_state = HI;
+		end 
+		else if(cap_touch_sig == 3'h02)begin
+			next_state = MED;
+		end 				
+		else begin
+			next_state = LOW;
+		end
 	end
 	
   endcase
@@ -414,7 +417,7 @@ module ece453_fsm_example(
   begin
     if  (reset == 1) 
     begin
-      current_state <= START;
+      current_state <= OFF;
     end 
     else 
     begin
