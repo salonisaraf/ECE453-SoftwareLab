@@ -343,13 +343,13 @@ module ece453_fsm_example(
 	OFF: begin
 		pwm_level = 2'h00;
 		if(cap_touch_sig == 3'h01)begin
-			next_state = HI;
+			next_state = LOW;
 		end 
 		else if(cap_touch_sig == 3'h02)begin
 			next_state = MED;
 		end 
 		else if(cap_touch_sig == 3'h04)begin
-			next_state = LOW;
+			next_state = HI;
 		end 				
 		else begin
 			next_state = OFF;
@@ -358,13 +358,10 @@ module ece453_fsm_example(
 	
 	HI: begin
 		pwm_level = 2'h03;	
-		if(cap_touch_sig == 3'h00)begin
-			next_state = OFF;
-		end 
-		else if(cap_touch_sig == 3'h02)begin
+		if(cap_touch_sig == 3'h02)begin
 			next_state = MED;
 		end 
-		else if(cap_touch_sig == 3'h04)begin
+		else if(cap_touch_sig == 3'h01)begin
 			next_state = LOW;
 		end 				
 		else begin
@@ -374,13 +371,10 @@ module ece453_fsm_example(
 	
 	MED: begin 
 		pwm_level = 2'h02;	
-		if(cap_touch_sig == 3'h00)begin
-			next_state = OFF;
-		end 
-		else if(cap_touch_sig == 3'h01)begin
+		if(cap_touch_sig == 3'h04)begin
 			next_state = HI;
 		end 
-		else if(cap_touch_sig == 3'h04)begin
+		else if(cap_touch_sig == 3'h01)begin
 			next_state = LOW;
 		end 				
 		else begin
@@ -390,10 +384,7 @@ module ece453_fsm_example(
 	
 	LOW: begin
 		pwm_level = 2'h01;	
-		if(cap_touch_sig == 3'h00)begin
-			next_state = OFF;
-		end 
-		else if(cap_touch_sig == 3'h01)begin
+		if(cap_touch_sig == 3'h04)begin
 			next_state = HI;
 		end 
 		else if(cap_touch_sig == 3'h02)begin
